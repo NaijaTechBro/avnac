@@ -115,9 +115,7 @@ export const template = pgTable(
   "template",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    authorId: text("author_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    ownerUserId: text("owner_user_id").references(() => user.id, { onDelete: "set null" }), 
     title: text("title").notNull(),
     thumbnailUrl: text("thumbnail_url").notNull(),
     document: jsonb("document").notNull(),
@@ -127,16 +125,14 @@ export const template = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [index("template_author_user_id_idx").on(table.authorId)]
+  (table) => [index("template_owner_user_id_idx").on(table.ownerUserId)] 
 );
 
 export const plugin = pgTable(
   "plugin",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    authorId: text("author_id")
-      .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+    ownerUserId: text("owner_user_id").references(() => user.id, { onDelete: "set null" }), 
     name: text("name").notNull(),
     description: text("description"),
     entryPointUrl: text("entry_point_url").notNull(),
@@ -145,7 +141,7 @@ export const plugin = pgTable(
       .defaultNow()
       .notNull(),
   },
-  (table) => [index("plugin_author_user_id_idx").on(table.authorId)]
+  (table) => [index("plugin_owner_user_id_idx").on(table.ownerUserId)]
 );
 
 export const schema = {

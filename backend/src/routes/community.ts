@@ -1,10 +1,11 @@
 import { Elysia, t } from "elysia";
 import { desc, eq } from "drizzle-orm";
+import { auth } from "../auth"; 
 import { db } from "../db";
 import { template, plugin } from "../db/schema";
-import { auth } from "../auth";
+import { HttpError } from "../lib/http";
 
-export const communityRoutes = new Elysia({ prefix: "/api/community" })
+export const communityRoutes = new Elysia({ prefix: "/community" })
   .get("/templates", async () => {
     const templates = await db
       .select()
@@ -19,20 +20,15 @@ export const communityRoutes = new Elysia({ prefix: "/api/community" })
   .post(
     "/templates",
     async ({ request, body, set }) => {
-      const session = await auth.api.getSession({
+      const authSession = await auth.api.getSession({
         headers: request.headers,
       });
-
-      if (!session) {
-        set.status = 401;
-        return { error: "Unauthorized. You must be logged in to publish." };
-      }
 
       try {
         const inserted = await db
           .insert(template)
           .values({
-            authorId: session.user.id,
+            ownerUserId: authSession?.user.id ?? null, 
             title: body.title,
             thumbnailUrl: body.thumbnailUrl,
             document: body.document,
@@ -40,11 +36,11 @@ export const communityRoutes = new Elysia({ prefix: "/api/community" })
           })
           .returning();
 
+        set.status = 201; 
         return { data: inserted[0] };
       } catch (err) {
         console.error(err);
-        set.status = 500;
-        return { error: "Failed to publish template" };
+        throw new HttpError(500, "Failed to publish template");
       }
     },
     {
