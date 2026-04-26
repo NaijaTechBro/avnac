@@ -111,12 +111,51 @@ export const document = pgTable(
   (table) => [index("document_owner_user_id_idx").on(table.ownerUserId)],
 );
 
+export const template = pgTable(
+  "template",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    title: text("title").notNull(),
+    thumbnailUrl: text("thumbnail_url").notNull(),
+    document: jsonb("document").notNull(),
+    isPublic: boolean("is_public").default(true).notNull(),
+    downloads: text("downloads").default("0").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("template_author_user_id_idx").on(table.authorId)]
+);
+
+export const plugin = pgTable(
+  "plugin",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    authorId: text("author_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    entryPointUrl: text("entry_point_url").notNull(),
+    isApproved: boolean("is_approved").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .defaultNow()
+      .notNull(),
+  },
+  (table) => [index("plugin_author_user_id_idx").on(table.authorId)]
+);
+
 export const schema = {
   user,
   session,
   account,
   verification,
   document,
+  template,
+  plugin,
 };
 
 export type AppSchema = typeof schema;
